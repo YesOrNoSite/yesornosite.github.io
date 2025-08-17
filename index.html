@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YesOrNo</title>
+
+  <!-- Fonte principal parecida com a do Roblox -->
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Fonte Bebas Neue para respostas -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --orange:#ff7a00;
+      --yellow:#ffd300;
+      --green:#86ffb3;
+      --red:#ff9090;
+      --navy:#1e3a8a;
+      --yellow-light:#fff59d;
+      font-family: "Source Sans 3", Arial, sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: #ffffff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      padding:32px;
+      position:relative;
+    }
+
+    /* Créditos botão no canto superior direito */
+    .credits-btn{
+      position:absolute;
+      top:16px;
+      right:16px;
+      background-color:var(--navy);
+      color:#fff;
+      border:none;
+      padding:10px 16px;
+      border-radius:8px;
+      font-weight:bold;
+      cursor:pointer;
+      text-decoration:none;
+    }
+
+    .container{text-align:center;}
+
+    /* título animado Yes or No */
+    .title {
+      font-size: 4rem;
+      font-weight: 900;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      line-height: 1;
+      margin-bottom:28px;
+    }
+    .yes {color:#77dd77;text-shadow:0 0 10px rgba(119,221,119,0.7);animation:pulse 2s infinite;}
+    .or {color:#ffa500;text-shadow:0 0 10px rgba(255,165,0,0.7);animation:pulse 2s infinite .2s;}
+    .no {color:#ff6961;text-shadow:0 0 10px rgba(255,105,97,0.7);animation:pulse 2s infinite .4s;}
+    @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+
+    .question-input{display:flex;flex-direction:column;gap:18px;align-items:center;}
+    input[type="text"]{
+      width:100%;max-width:500px;padding:18px 22px;border-radius:14px;
+      border:2px solid transparent;
+      font-size:20px;outline:none;
+      background: #f9f9fb;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+    }
+    input[type="text"]:focus{
+      border-color:#77dd77;
+      background:#fff;
+      box-shadow: 0 8px 20px rgba(119,221,119,0.3);
+    }
+    input::placeholder{color:#a0a7b3;}
+
+    .status{
+      min-height:60px;
+      display:flex;
+      justify-content:center;
+      font-weight:800;
+      font-size:2.5rem;
+      margin-top:12px;
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 1px;
+    }
+    .glow{ text-shadow:0 0 18px currentColor; }
+    .prompt.orange{color:var(--orange);}
+    .prompt.yellow{color:var(--yellow);}
+    .prompt.yes{color:var(--green);}
+    .prompt.no{color:var(--red);}
+
+    .embed{
+      margin-top:16px;
+      background:#f5f5f5;
+      border-radius:12px;
+      padding:20px;
+      display:inline-block;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      font-size:3rem;
+    }
+    .embed span{display:inline-block;animation:glowAnim 1.5s infinite alternate;}
+    @keyframes glowAnim {from{text-shadow:0 0 6px currentColor;}to{text-shadow:0 0 18px currentColor;}}
+
+    .embed.sim{color:#006400;} /* verde escuro */
+    .embed.nao{color:#8b0000;} /* vermelho escuro */
+    .embed.pergunta{color:#cc5500;} /* laranja escuro */
+    .embed.loading{color:#b8860b;} /* amarelo escuro */
+
+    /* animação de 3 pontos */
+    .dots::after {
+      content: '';
+      animation: dots steps(1,end) 1.5s infinite;
+    }
+    @keyframes dots {
+      0% { content: ''; }
+      25% { content: '.'; }
+      50% { content: '..'; }
+      75% { content: '...'; }
+      100% { content: ''; }
+    }
+  </style>
+</head>
+<body>
+  <a href="credits.html" class="credits-btn">Créditos</a>
+  <div class="container">
+    <header>
+      <div class="title">
+        <span class="yes">Yes</span>
+        <span class="or">or</span>
+        <span class="no">No</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="question-input">
+        <input id="q" type="text" placeholder="Escreva uma pergunta..." />
+        <div class="status"><span class="glow prompt orange" id="statusText">Faça uma pergunta</span></div>
+        <div id="embedBox"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const input = document.getElementById('q');
+    const statusText = document.getElementById('statusText');
+    const embedBox = document.getElementById('embedBox');
+    let analyzing=false;
+
+    function showPrompt(cls,text){
+      statusText.className='glow prompt '+cls;
+      statusText.textContent=text;
+    }
+    function decideAnswer(){
+      const isYes = Math.random()<0.5;
+      const answer = isYes ? 'Sim' : 'Não';
+      showPrompt(isYes?'yes':'no', answer);
+      embedBox.innerHTML = '';
+      if(isYes){
+        embedBox.innerHTML = `<div class="embed sim"><span>✔️</span></div>`;
+      } else {
+        embedBox.innerHTML = `<div class="embed nao"><span>❌</span></div>`;
+      }
+    }
+    function startAnalyze(){
+      if(analyzing)return;
+      analyzing=true;
+      showPrompt('yellow','Analisando');
+      embedBox.innerHTML = `<div class="embed loading"><span class="dots"></span></div>`;
+      setTimeout(()=>{decideAnswer();analyzing=false;},2000);
+    }
+
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        const v=input.value.trim();
+        if(!v || !v.includes('?')){
+          showPrompt('orange','Faça uma pergunta');
+          embedBox.innerHTML = `<div class="embed pergunta"><span>⏰</span></div>`;
+          return;
+        }
+        startAnalyze();
+      }
+    });
+  </script>
+</body>
+</html>
